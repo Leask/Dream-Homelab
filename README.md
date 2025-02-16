@@ -299,6 +299,154 @@ https://192.168.1.64:8006
 ```
 注意，這裡是 https，然後需要瀏覽器忽略一下自簽證書的安全檢查。
 
+### 配置顯卡直通
+
+如果有 AI 運算需求，遊戲需求或者視頻編輯需求，顯卡直通是必不可少的，這裡面往上有很多的介紹，有對有錯，這裡簡單總結一下步驟：
+
+- BIOS 中開啟 IOMMU，這一點尤其重要：
+有一些主板是默認關閉的，也有一些主板是默認開啟的，需要手動確認一下：
+```
+dmesg | grep -e DMAR -e IOMMU
+```
+確保輸出中有：
+```
+DMAR: IOMMU enabled
+```
+- 確保 IOMMU interrupt remapping 可用：
+
+```
+dmesg | grep 'remapping'
+```
+確保輸出中有：
+```
+AMD-Vi: Interrupt remapping enabled
+```
+或者:
+```
+DMAR-IR: Enabled IRQ remapping in ******* mode
+```
+如果找不到，可以嘗試強制開啟：
+```
+echo "options vfio_iommu_type1 allow_unsafe_interrupts=1" > /etc/modprobe.d/iommu_unsafe_interrupts.conf
+```
+確保 /etc/modules 中有以下的條目：
+```
+vio
+vfio_iommu_type1
+vfio_pci
+vfio_virqfd
+```
+如果計畫需要更好虛擬 macOS，運行：
+```
+echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
+```
+- 在啟動的時候，讓宿主機忽略需要分配給 VM 的顯卡：
+不加載 AMD 顯卡的驅動：
+```
+echo "blacklist amdgpu" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist radeon" >> /etc/modprobe.d/blacklist.conf
+```
+不加載 NVIDIA 顯卡的驅動：
+```
+echo "blacklist nouveau" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist nvidia*" >> /etc/modprobe.d/blacklist.conf
+```
+不加在 Intel 顯卡的驅動：
+```
+echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf
+```
+- 更新啟動鏡像：
+```
+update-initramfs -u
+```
+
+做以上操作之後，大部分的 AMD 顯卡 NVIDIA 顯卡和 Intel 顯卡都可以直通給 VM 使用了，這裡需要注意的是，如果宿主機需要 GUI 的話，不要忽略 Intel 的顯卡驅動，這樣可以保留板載顯卡用來良機和調試。
+
+如果上面的操作依然出現問題，個人建議換支持度更高和更新的顯卡，雖然網上有很多奇技淫巧可以一定程度解決問題，但是穩定性和兼容性很難保證，同時需要額外的 hack 來解決的顯卡一般都比較老了，算力上其實意義不大，可以趁機升級了。
+
+更多信息可以參考這裡：https://pve.proxmox.com/wiki/PCI_Passthrough
+
+
+## PVE 集群配置
+
+基本上每一個 PVE 節點都需要經歷上面的配置，在完成單獨的配置之後，可以開始把 PVE 節點組合成集群。
+
+注意，這裡強調一下，為了穩定可用，集群應該保證最少 3 個節點，考慮到後面需要 Ceph 的話，最少需要 4 個節點更為合適。兩個節點，當其中一個節點 down 掉之後，會有投票無法過半數的問題，需要手動修改投票規則才能啟動虛擬機。
+
+在組合成集群之前，先確定是那個節點加入到那個節點，這裡暫且叫做主從節點，但是其實 PVE 並沒有主從的概念，集群中的主機是通過 quorum 投票來取的一致性的。確定誰加入誰的一個原因是，作為從節點，也就是新加入集群的節點，是不能有虛擬機的，如果有，需要先備份並銷毀，因為 PVE 中的 VM id 是全局唯一的，所以已經有 VM 的機器是不允許加入集群的。
+
+在“主”節點上創建集群：
+
+```
+pvecm create [CLUSTERNAME]
+```
+
+在“從”節點上加入集群：
+```
+pvecm add [IP-ADDRESS-CLUSTER]
+```
+
+查看集群的狀態：
+```
+╰ $ > sudo pvecm status
+[sudo] password for leask:
+Sorry, try again.
+[sudo] password for leask:
+Cluster information
+-------------------
+Name:             Dream
+Config Version:   8
+Transport:        knet
+Secure auth:      on
+
+Quorum information
+------------------
+Date:             Sun Feb 16 03:32:55 2025
+Quorum provider:  corosync_votequorum
+Nodes:            4
+Node ID:          0x00000001
+Ring ID:          1.b1f
+Quorate:          Yes
+
+Votequorum information
+----------------------
+Expected votes:   4
+Highest expected: 4
+Total votes:      4
+Quorum:           3
+Flags:            Quorate
+
+Membership information
+----------------------
+    Nodeid      Votes Name
+0x00000001          1 192.168.1.204 (local)
+0x00000002          1 192.168.1.201
+0x00000003          1 192.168.1.202
+0x00000004          1 192.168.1.79
+```
+
+查看集群節點和投票權重：
+```
+sudo pvecm nodes
+
+Membership information
+----------------------
+    Nodeid      Votes Name
+         1          1 Enlightenment (local)
+         2          1 Juan
+         3          1 Rio
+         4          1 Rubao
+```
+
+順帶說一下，如果需要移除一個節點的話，可以用這個命令：
+```
+pvecm delnode [NODE-NAME]
+pvecm delnode hp4
+```
+
+## 鏈路聚合
+
+## Ceph 配置
 
 
 
