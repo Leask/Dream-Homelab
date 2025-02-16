@@ -216,18 +216,19 @@ PVE 的官方文檔上要求 Debian 版本是 12 Bookworm，事實上大家可�
 
 - 安裝 Debian 12 Bookworm，切換到 stable 分支；
 - 在 /etc/host 中加入當前主機的 IP 地址
-```/etc/host
-[本機本地 IP]    [當前主機名]
-```
-例如：
-```/etc/host
-192.168.1.64    Enlightenment
-```
-確保地址正確：
-```
-hostname --ip-address
-```
-確保返回的地址是 /etc/host 中配置的地址，而不是 127.0.0.1 或者 ::1 等。
+
+        ```/etc/host
+        [本機本地 IP]    [當前主機名]
+        ```
+        例如：
+        ```/etc/host
+        192.168.1.64    Enlightenment
+        ```
+        確保地址正確：
+        ```
+        hostname --ip-address
+        ```
+        確保返回的地址是 /etc/host 中配置的地址，而不是 127.0.0.1 或者 ::1 等。
 - 添加 PVE 的 apt 源：
 ```
 # echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
