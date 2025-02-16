@@ -299,6 +299,88 @@ https://192.168.1.64:8006
 ```
 注意，這裡是 https，然後需要瀏覽器忽略一下自簽證書的安全檢查。
 
+### 配置網橋，確保虛擬機能訪問網絡
+
+詳情可以參考這裡：https://pve.proxmox.com/wiki/Network_Configuration
+
+簡單來說，你需要配置一個網橋，便於虛擬機可以方便橋接到主網絡中：
+
+```/etc/network/interface
+auto lo
+iface lo inet loopback
+
+iface eno1 [網卡的設備號，如 eno1, enp1s0 等等，通過 ifconfig -a 查看] manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address [配置為上面步驟中的 IP 地址]/24 (一般是這個網段，如果需要其他網段，可以自行修改，也可以配置 netmask 來配置) // 待定細節
+        gateway [配置為上面路由器地址]
+        bridge-ports [網卡的設備號，如前所述]
+        bridge-stp off
+        bridge-fd 0
+```
+
+### 配置鏈路聚合
+
+如果你的交換機支持 LACP，應該配置鏈路聚合，這樣可以提高網絡的穩定性和帶寬，對集群的穩定性，特別是 Ceph 的穩定性有很大的幫助。
+
+```
+╰ $ > cat /etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto enp130s0f4
+iface enp130s0f4 inet manual
+
+auto enp130s0f4d1
+iface enp130s0f4d1 inet manual
+
+auto enp130s0f4d2
+iface enp130s0f4d2 inet manual
+
+auto enp130s0f4d3
+iface enp130s0f4d3 inet manual
+
+auto bond0
+iface bond0 inet manual
+    bond-slaves enp130s0f4 enp130s0f4d1 enp130s0f4d2 enp130s0f4d3
+    bond-mode 802.3ad
+    bond-xmit-hash-policy layer2+3
+    bond-miimon 100
+    bond-downdelay 200
+    bond-updelay 200
+    bond-lacp-rate 1
+
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.1.204
+    netmask 255.255.255.0
+    gateway 192.168.1.1
+    bridge-ports bond0
+    bridge-stp off
+    bridge-fd 0
+```
+
+測速，確保聚合有效
+
+```
+待補充
+```
+
+
+
+配置完成後，重啟網絡：
+```
+systemctl restart networking
+```
+
+
 ### 配置顯卡直通
 
 如果有 AI 運算需求，遊戲需求或者視頻編輯需求，顯卡直通是必不可少的，這裡面往上有很多的介紹，有對有錯，這裡簡單總結一下步驟：
