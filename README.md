@@ -102,33 +102,14 @@
 
 另一點就是考慮傳統 RJ45 電口還是 SFP/SFP+/SFP28/QSFP+/QSFP28 等光模塊接口。在這個問題上，我考慮了很久，主要的原因是，我已經有一部分的設備已經是 10GE 電接口的，如果我選擇 SFP+ 路線，我將無法兼容已有的設備。但是 10G 以上電口在我之前的使用中，的確遇到一些問題，網卡載荷大，發熱高，我的確想趁機會演進到光口路線。在花了很多時間考量，最後決定都要有，事實上到目前為止，我依然覺得這是一個正確的決定，目前的網絡容量和靈活性讓我在工作中獲得了很大的彈性，並預留了足夠的性能空間。
 
-### 選擇一個交換機
+我選用的設備：
 
-正如我前面說的，我需要有足夠的電口和光口，可管理，可堆疊，可擴展，高性能，穩定可靠的交換機。我最終的選擇是：
-
-#### UniFi USW-Pro-Aggregation 作為聚合交換機
-
-我選擇這款路由器作為核心網的基礎。它有 32 個 28 個 10G SFP+ 接口和 4 個 25G SFP28 接口，交換容量是 760 Gbps，非阻塞 IO 能到 380 Gbps，支持 VLANs 和鏈路聚合，Layer 3 和 Layer 2 都是可管理的。
-
-https://ca.store.ui.com/ca/en/products/usw-pro-aggregation
-
-#### UniFi USW-EnterpriseXG-24 作為以太網交換機
-
-我使用這一款交換機來兼容原有的設備，支持 Wi-Fi 熱點，遠程 KVM 的應用。它有 24 個 10 GbE RJ45 電口和 2 個 25G SFP28 光口，交換容量是 580 Gbps，非阻塞 IO 能到 290 Gbps，同樣支持 VLANs， Layer 3 和 Layer 2 可管理。
-
-https://ca.store.ui.com/ca/en/products/usw-enterprisexg-24
-
-### 選擇入口路由，防火牆
-
-根據自己的需要選擇一個入口路由，或者防火牆路由來接入網絡，這需要考慮的主要是，它的 Uplink 能不能滿足你家的網絡接入速率，Downlink 能不能滿足你核心交換機的吞吐。我選的是 Dream Machine Special Edition (UDM-SE (180W))。
-
-這款路由器一個 10G SFP+ Uplink 作為主要入口，一個 2.5 GbE RJ45 Uplink 作為備用網絡入口，有 1 個 10G SFP+ Downlink 和 8 個 GbE RJ45 Downlink，其中 2 個電口支持 PoE+， 其餘 6 個是電口都支持 PoE。
-
-它唯一讓我不滿意的是 Uplink 只開放了 3.5Gbps，雖然對於我只有 3Gbps 對等光線接入的用戶來說是足夠的，但是總覺得餘量不足，比較懊悔的是，我下單之後不久，Dream Machine Pro Max (UDM-Pro-Max) 就上市了，它的 Uplink 能到 5 Gbps，就好不少。
-
-### 關於 Wi-Fi
-
-順帶說一下無線網絡的延伸。我是多年的 Google Wi-Fi (Nest Wi-Fi) 用戶，趁著網絡的改造，我也順便換上了支持 Wi-Fi 6 的 UniFi AP 6 Lite，這款 Wi-Fi 7 的 U7-Pro 熱點。當然，主要的考慮是更便於整合到 Unifi 的生態，簡化管理。但是體驗下來，Wi-Fi 7 的確對於經常需要視頻通話和串流遊戲帶來了更好的體驗。
+- [UniFi USW-Pro-Aggregation](https://ca.store.ui.com/ca/en/products/usw-pro-aggregation) 作為聚合交換機
+        正如我前面說的，我需要有足夠的電口和光口，可管理，可堆疊，可擴展，高性能，穩定可靠的交換機作為核心網的基礎。這款交換機有 32 個 28 個 10G SFP+ 接口和 4 個 25G SFP28 接口，交換容量是 760Gbps，非阻塞 IO 能到 380 Gbps，支持 VLANs 和鏈路聚合，Layer 3 和 Layer 2 都是可管理的。
+- [UniFi USW-EnterpriseXG-24](https://ca.store.ui.com/ca/en/products/usw-enterprisexg-24) 作為以太網交換機
+        我使用這一款交換機來兼容原有的設備，支持 Wi-Fi 熱點、遠程 KVM、智能家居等傳統電口網絡設備。它有 24 個 10G RJ45 電口和 2 個 25G SFP28 光口，交換容量是 580Gbps，非阻塞 IO 能到 290Gbps，同樣支持 VLANs， Layer 3 和 Layer 2 可管理。
+- [UniFi Dream Machine Special Edition (UDM-SE 180W)](https://ca.store.ui.com/ca/en/products/udm-se) 作為入口路由、防火牆。
+        這款設備有一個 10G SFP+ Uplink 作為主要入口，一個 2.5G RJ45 Uplink 作為備用網絡入口，有 1 個 10G SFP+ Downlink 和 8 個 GE RJ45 Downlink，其中 2 個電口支持 PoE+， 其餘 6 個是電口都支持 PoE。它唯一讓我不滿意的是 Uplink 只開放了 3.5Gbps，雖然我只有 3Gbps 對等光線接入，的確已經足夠，但是總覺得餘量不足，比較懊悔的是，我下單不久[Dream Machine Pro Max (UDM-Pro-Max)](https://ca.store.ui.com/ca/en/category/cloud-gateways-large-scale/products/udm-pro-max) 就上市了，它的 Uplink 能到 5 Gbps，就好不少。
 
 ### 網絡組建
 
