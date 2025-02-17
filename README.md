@@ -214,7 +214,7 @@ $ hostname --ip-address
 # wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 ```
 
-驗證密鑰（具體的最新密鑰 hash 值請參考[官方文檔](https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm)）：
+驗證密鑰（最新密鑰 hash 值請參考[官方文檔](https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm)）：
 
 ```bash
 $ sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
