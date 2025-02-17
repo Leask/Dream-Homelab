@@ -106,7 +106,7 @@
 
 - [UniFi USW-Pro-Aggregation](https://ca.store.ui.com/ca/en/products/usw-pro-aggregation) 作為聚合交換機；
 
-        正如我前面說的，我需要有足夠的電口和光口，可管理，可堆疊，可擴展，高性能，穩定可靠的交換機作為核心網的基礎。這款交換機有 32 個 28 個 10G SFP+ 接口和 4 個 25G SFP28 接口，交換容量是 760Gbps，非阻塞 IO 能到 380 Gbps，支持 VLANs 和鏈路聚合，Layer 3 和 Layer 2 都是可管理的。
+`正如我前面說的，我需要有足夠的電口和光口，可管理，可堆疊，可擴展，高性能，穩定可靠的交換機作為核心網的基礎。這款交換機有 32 個 28 個 10G SFP+ 接口和 4 個 25G SFP28 接口，交換容量是 760Gbps，非阻塞 IO 能到 380 Gbps，支持 VLANs 和鏈路聚合，Layer 3 和 Layer 2 都是可管理的。`
 
 - [UniFi USW-EnterpriseXG-24](https://ca.store.ui.com/ca/en/products/usw-enterprisexg-24) 作為以太網交換機；
 
