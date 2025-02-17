@@ -16,14 +16,15 @@
 
 在一個超融合計算中心裡面，除了物理主機的網絡連接需要單獨的網絡設備之外，其他的資源都可以通過虛擬化平台來提供，每個物理主機都是全能節點，承擔部分的計算和存儲，他們之間`緊密相連`，`資源共享`，`相互備援`。超融合不是一個特定的單一軟件技術，它其實脫胎於虛擬化、分佈式存儲等一系列技術上的概念。在實施上，常見的超融技術棧有 [PVE (Proxmox VE)](https://www.proxmox.com/en/proxmox-ve) + [Ceph](https://ceph.io), [VMware vSphere](https://www.vmware.com/products/cloud-infrastructure/vsphere), [Hyper-V](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/hyper-v-overview) + [S2D](https://learn.microsoft.com/en-us/system-center/vmm/s2d-hyper-converged?view=sc-vmm-2025&tabs=HyperVhosts) 等等。本文以 PVE + Ceph 為例子，其他方案的包裝可能有差異，但是原理是相通的。
 
+## 硬件準備
 
-## 先要有個機櫃
+這個部分介紹一些我選用的硬件，沒有任何廣告的成分，因為 X 上很多人對我用的設備感興趣，這裡簡單介紹一下一些基礎的選型思路。
 
-首先要有一個機櫃。選型上，除了通風設計的考慮之外，我認為首先要測量一下計畫存放的房間或者地下室的高度，在能容納的高度範圍內選擇一個最高的。高度決定了這套設備將來的擴展性，不要猶豫，越高越好。
+### 先要有個機櫃
 
-我的地下室有一根懸梁，限制了最大高度，所以只能選擇的最大32U的，具體是這款：StarTech.com 4-Post 32U Server Rack Cabinet (https://www.amazon.ca/dp/B099986PZF?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_5&th=1)。
+首先要有一個機櫃。選型上，除了通風設計的考慮之外，我認為首先要測量一下計畫存放的房間或者地下室的高度，在能容納的高度範圍內選擇一個最高的。高度決定了這套設備將來的擴展性，不要猶豫，越高越好。我的地下室有一根懸梁，限制了最大高度，所以只能選擇的最大 32U 的，具體是這款：[StarTech.com 4-Post 32U Server Rack Cabinet](https://www.amazon.ca/dp/B099986PZF?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_5&th=1)。
 
-下面這個表列出了多少 Unit 的櫃子大概有多少高度，範圍從 1U 到 48U，也可以直接在這個頁面上動態估算： https://www.penn-elcom.com/ca/rack-unit-calculator。
+下面這個表列出了多少 Unit 的櫃子大概有多少高度，範圍從 1U 到 48U，也可以直接在[這個頁面](https://www.penn-elcom.com/ca/rack-unit-calculator)上動態估算。
 
 | Rack Units | Height (in) | Height (ft) | Height (cm) |
 |------------|------------|------------|------------|
