@@ -380,6 +380,29 @@ iface vmbr0 inet static
 systemctl restart networking
 ```
 
+### 開啟 Jumbo Frame
+
+Jumbo Frame 是 10GE 對於高速網絡至關重要，更大的包可以減少包的數量，降低 CPU 在封包和解包過程的負擔，顯著提升網絡的吞吐量。
+
+```bash
+# /usr/bin/ip link set [port] mtu 9000
+```
+
+根據需要修改 `[port]` 為你的網絡接口名稱，如果單網卡，在 PVE 環境應該修改 `vmbr0` 的 MTU：
+
+```bash
+# /usr/bin/ip link set vmbr0 mtu 9000
+```
+
+如果你有使用上面的 LACP 鏈路聚合，這裡需要使用聚合的接口名稱，例如：
+
+```bash
+# /usr/bin/ip link set bond0 mtu 9000
+```
+
+你可以把類似的配置放在 `/etc/network/interfaces` 中，也可以直接把上面的命令放在 crontab 通過 `@reboot` 和 `sleep` (等待網絡接口初始化完成) 來執行，完全是個人喜好，此處不做贅述。
+
+注意！請保證你的每個節點，使用相同的 MTU 包尺寸設置，這將是集群穩定性的關鍵，如果 MTU 不一致，PVE 集群會出現不穩定，某個節點突然斷開的情況。對於 Ceph 更是如此，不一致的 MTU 會導致 OSD 心跳受阻，進而導致 OSD 頻繁從集群中離線。我有一個機器出現這個情況花了很長的時間才發現這是一個致命的問題。
 
 ### 配置顯卡直通
 
@@ -541,6 +564,7 @@ pvecm delnode hp4
 - Monitor 負責集群的元數據管理，包括集群的拓撲結構，節點的健康狀態等。
 - OSD (Object Storage Daemon) 負責數據的存儲和檢索，每個機器的每一塊物理存儲，都需要配置一個 OSD，他們各自獨立，互不干擾，只對 Monitor 負責。
 - MDS (Metadata Server) 負責文件系統的元數據管理，如果需要使用 CephFS 的話，需要配置 MDS，CephFS 服務的 overhead 比較大，根據自己的需要開啟，但是作為跨節點的文件共享服務相當好用，我推薦大家嘗試一下。
+- PG (Placement Group) 是 Ceph 的數據邏輯管理單元，Ceph 通過 PG 來管理數據的分配，每個 OSD 通常會包含若干個 PG，每個 PG 會根據 CRUSH map 的策略，在不同 OSD 上放置副本，對於每個存儲池需要切割成多少個 PG，後面會介紹。
 
 Ceph 存儲池的重要參數：
 
@@ -651,12 +675,96 @@ Used_space = sum(data_size) * size
 
 這和 RAID 不一樣，RAID 的容量是磁盤 RAID 之後，實際可以使用的容量，而不是裸磁盤的容量，RAID 查看數據的體積是數據的實際體積，而不考慮冗余和糾錯。
 
+### 關於 PG 的個數選擇
 
+PG 數量會影響 Ceph 的性能和數據分佈的均勻程度。
+
+同等數據體積下，PG 數量越多，數據越容易均勻分佈，分佈式訪問數據的時候理論性能更高，但是過多的 PG 會導致元數據過大，從而影響性能。
+
+反過來如果 PG 數量過小，數據分佈不均勻，會導致某些 OSD 負擔過重，從而影響集群的穩定性。
+
+每個存儲池需要多少個 PG，通常可以通過以下公式來計算：
+
+```
+PG = (OSD * [OSD_TARGET_PG_NUM, best practice is 100] ) / (pool_num *  size)
+```
+
+然後一般會取一個最近 2 的冪值作為 PG 的數量，這樣可以保證將來重新分配的時候，PG 更容易均勻分佈。
+
+其中，`OSD` 是集群中 OSD 的數量，`OSD_TARGET_PG_NUM` 是每個 OSD 的目標 PG 數量，廣泛接受的經驗最佳實踐值是 100，`pool_num` 是存儲池的數量，`size` 是副本數。
+
+例如我的集群每個節點 5 個 SSD，一共 4 個節點，副本數是 4，有4個存儲池，那麼：
+
+```
+PG = (4 * 5 * 100) / (2 * 4) = 250 ～= 256 (2^8)
+```
+
+偷懶的話也可以直接訪問 PVE 的 Ceph 管理介面，找到 `Optimal # of PGs` 值，直接寫到對應的存儲池的 PG 數配置上。
+
+這裡額外說一下幾個常用的配置：
+
+- PG Auto Scale：自動調整 PG 數量，根據集群的負載自動調整 PG 數量，建議打開。
+- Target Ratio: 目標佔比，也就是當前存儲池會自動擴展，一直達到佔用整集群空間的目標佔比為止。
+- Target Max PG: 目標最大 PG 尺寸，就是當 PG 中的數據變超過這個尺寸，將會自動進行重分配到新的 PG 上。
+- Min. # of PGs: 這個存儲池最少佔用多少個 PG，默認為 0。
 
 ### 關於 CRUSH map
 
+幾乎所有對於 Ceph 集群中所有重要的配置都可以通過修改 CRUSH map 來實現，它控制數據的分配策略，你可以在 PVE 的 Ceph 管理介面上看到你的 CRUSH map 配置。
+
+你可以放心修改你的 CRUSH map，Ceph 會根據新的 CRUSH map 重新平衡數據的分佈，整個過程是在線完成的，無需停機，不影響業務，而且效率很高。
+
+所以，其實你可以隨意往集群裡面添加刪除 OSD，然後修改 CHUSH map 讓數據自動平衡，這是我最喜歡 Ceph 的地方，比任何磁盤陣列都方便，任何磁盤陣列做這類操作都無法做到這麼平滑。
 
 
+
+修改 CRUSH map 的基本步驟：
+
+- 獲得 CRUSH map 的二進制文件：
+
+```
+# ceph osd getcrushmap -o crushmap.compiled
+```
+- 解碼 CRUSH map 文件：
+
+```
+$ crushtool -d crushmap.compiled -o crushmap.text
+```
+
+- 修改 CRUSH map 文件：
+
+```
+$ vim crushmap.text
+```
+
+- 編碼 CRUSH map 文件：
+
+```
+$ crushtool -c crushmap.text -o crushmap.compiled.new
+```
+
+- 測試新的 CRUSH map 二進制文件（可選）：
+
+```
+# crushtool -i crushmap.compiled.new --test --show-X
+```
+
+- 應用新的 CRUSH map 二進制文件：
+
+```
+# ceph osd setcrushmap -i crushmap.compiled.new
+```
+
+一些常用的 CRUSH map 配置：
+
+- `min_size`：最小副本數，默認為 1，這個設置優先級低於存儲池的配置。
+- `max_size`：最大副本數，默認為 10，這個設置優先級低於存儲池的配置。
+- `step take default class [class-name]`：優先選擇指定類型的 OSD 類如 `hdd`，`ssd`，`nvme` 等，這個對於需要分開不存儲池，例如機械池和 SSD 池的場景非常有用。
+
+### 網絡對於 Ceph 集群至關重要
+
+
+簡單總結，Ceph 完全是軟件定義數據中心概念的典範，你完全可以先根據自己的喜好來創建初始存儲池，然後根據不斷變化的業務需求中，不斷調整集群的配置，包括冗余，PG 數，介質類型，數量等等，它都會自動根據新的配置重新組織物理數據，這個過程相當平滑和安全。
 
 
 
