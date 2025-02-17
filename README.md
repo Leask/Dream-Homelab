@@ -108,7 +108,7 @@
 - 以太網交換機[UniFi USW-EnterpriseXG-24](https://ca.store.ui.com/ca/en/products/usw-enterprisexg-24)
     > 我使用這一款交換機來兼容原有的設備，支持 Wi-Fi 熱點、遠程 KVM、智能家居等傳統電口網絡設備。它有 24 個 10G RJ45 電口和 2 個 25G SFP28 光口，交換容量是 580Gbps，非阻塞 IO 能到 290Gbps，同樣支持 VLANs， Layer 3 和 Layer 2 可管理。
 
-- 入口路由 / 防火牆 [UniFi Dream Machine Special Edition (UDM-SE 180W)](https://ca.store.ui.com/ca/en/products/udm-se)
+- 入口路由/防火牆 [UniFi Dream Machine Special Edition (UDM-SE 180W)](https://ca.store.ui.com/ca/en/products/udm-se)
     > 這款設備有一個 10G SFP+ Uplink 作為主要入口，一個 2.5G RJ45 Uplink 作為備用網絡入口，有 1 個 10G SFP+ Downlink 和 8 個 GE RJ45 Downlink，其中 2 個電口支持 PoE+， 其餘 6 個是電口都支持 PoE。它唯一讓我不滿意的是 Uplink 只開放了 3.5Gbps，雖然我只有 3Gbps 對等光線接入，的確已經足夠，但是總覺得餘量不足，比較懊悔的是，我下單不久[Dream Machine Pro Max (UDM-Pro-Max)](https://ca.store.ui.com/ca/en/category/cloud-gateways-large-scale/products/udm-pro-max) 就上市了，它的 Uplink 能到 5 Gbps，就好不少。
 
 ### 主要網絡設備的拓撲
@@ -158,8 +158,10 @@
 
 為什麼說 Ceph 是超融合方案的核心？其實前文已經提到，在超融合數據中心裡面，所有的資源是充分共享和網絡化的。你可以理解，業務不是運行在單一機器，或者單一個虛擬機裡，粗略又抽象地理解，服務是跑在集群上。整個集群一起來支撐每個業務，機器之間緊密相連，相互備援。在 PVE 中正確配置 Ceph 作為存儲後端之後，虛擬機是可以在集群裡面隨意遷移的，VM 可以不關機從一個主機直接遷移到另一個主機上運行，對外甚至是無感知的。這帶來了很多便利，例如一台機器故障或者需要維護重啟，你完全不用擔心上面的業務，PVE 可以自動把運行中的 VM 在線遷移到集群中其他機器上運行。這種無縫遷移依賴集群把存儲視為一個整體，從不同機器都可以訪問到一樣的數據。PVE 當然也支持通過 SAN 網絡或者 NFS 等傳統方案來實現統一存儲，但顯然 Ceph 是更面向未來的選擇。
 
-- 有幾點需要強調一下，為了獲得足夠理想的 IO 性能，全 SSD 或者 NVME 配置應該是優先考慮的；
-- 為了獲得足夠的穩定性和冗余，個人推薦從 4 個節點起步，size 4，min 2 應該是最低的安全保障，這相當於集群中每一份數據保存在至少兩個節點上，至少滿足兩個節點在線的時候允許讀寫，掛掉兩個節點不影響業務。
+有幾點需要注意：
+
+- 為了獲得足夠理想的 IOPS 性能，至少一個全 SSD/NVME 存儲池是值得優先考慮的；
+- 為了獲得足夠的冗余，推薦從 4 個節點起步，size 4，min 2 應該是最低安全保障，這相當於集群中每份數據保存在 4 個節點上，至少滿足 2 個節點在線時允許讀寫，2 個節點離線不影響業務。
 
 ## 安裝虛擬化平台 PVE
 
