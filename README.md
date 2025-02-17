@@ -295,181 +295,200 @@ https://192.168.1.64:8006
 
 注意協議是`https`，瀏覽器需要忽略一下自簽證書的安全檢查。管理頁面默認可以通過系統的`root`帳戶密碼登陸，`Realm`選擇`Linux PAM standard authentication`，進入系統之後配置其他登錄驗證方式。
 
-至此 PVE 節點已經完成了基本的安裝，下面我會開始介紹一些必須的配置項目。
+至此 PVE 節點已經完成了基本的安裝，重複以上過程在其他節點上安裝 PVE。下面我會開始介紹一些必須的配置項目。
 
---------------------------------------- 優化進度 ---------------------------------------
-### 配置網橋，確保虛擬機能訪問網絡
+### 配置網絡
 
-詳情可以參考這裡：https://pve.proxmox.com/wiki/Network_Configuration
+你需要先配置一個網橋，便於 VM 訪問網絡，[PVE 官方文檔中有詳情](https://pve.proxmox.com/wiki/Network_Configuration)：
 
-簡單來說，你需要配置一個網橋，便於虛擬機可以方便橋接到主網絡中：
+#### 1. 先查詢網卡設備號
 
-```/etc/network/interface
+```bash
+$ ifconfig -a
+```
+
+識別出網口設備號，如 eno1, enp1s0 等等，紀錄下來。
+
+#### 2. 配置網橋
+
+編輯 `/etc/network/interfaces` 文件，根據需要添加以下內容：
+
+```interfaces
 auto lo
 iface lo inet loopback
 
-iface eno1 [網卡的設備號，如 eno1, enp1s0 等等，通過 ifconfig -a 查看] manual
+auto [網口設備號]
+iface [網口設備號] manual
 
-auto vmbr0
-iface vmbr0 inet static
-        address [配置為上面步驟中的 IP 地址]/24 (一般是這個網段，如果需要其他網段，可以自行修改，也可以配置 netmask 來配置) // 待定細節
-        gateway [配置為上面路由器地址]
-        bridge-ports [網卡的設備號，如前所述]
+auto [新建網橋設備號，如 vmbr0]
+iface [新建網橋設備號，如 vmbr0] inet static
+        address [配置為安裝步驟中指定的 IP 地址]/24(可通過`/`配置網段，也可通過`netmask`來配置)
+        netmask [子網掩碼](如果上面一行已配置網段，此處可忽略)
+        gateway [配置網關地址]
+        bridge-ports [網口設備號，如前所述]
         bridge-stp off
         bridge-fd 0
 ```
 
-### 配置鏈路聚合
+### 3. 配置鏈路聚合
 
-如果你的交換機支持 LACP，應該配置鏈路聚合，這樣可以提高網絡的穩定性和帶寬，對集群的穩定性，特別是 Ceph 的穩定性有很大的幫助。
+如交換機支持 LACP，或有兩個以上交換機且同時連接，強烈建議配置[鏈路聚合](https://pve.proxmox.com/wiki/Network_Configuration)，你可以聚合兩個或多個網絡接口，這樣可以提高網絡的穩定性和帶寬，對集群的穩定性，特別是 Ceph 的穩定性有很大的幫助。
 
-```
-╰ $ > cat /etc/network/interfaces
-# This file describes the network interfaces available on your system
-# and how to activate them. For more information, see interfaces(5).
+編輯 `/etc/network/interfaces` 文件，根據需要添加以下內容，注意由於增加了鏈路聚合層，網橋中指定的設備號要`物理網口設備號`改為`聚合設備號`：
 
-source /etc/network/interfaces.d/*
+```interfaces
+auto [網口 1 設備號]
+iface [網口 1 設備號] manual
 
-# The loopback network interface
-auto lo
-iface lo inet loopback
+auto [網口 2 設備號]
+iface [網口 2 設備號] manual
 
-auto enp130s0f4
-iface enp130s0f4 inet manual
+[...]
 
-auto enp130s0f4d1
-iface enp130s0f4d1 inet manual
-
-auto enp130s0f4d2
-iface enp130s0f4d2 inet manual
-
-auto enp130s0f4d3
-iface enp130s0f4d3 inet manual
-
-auto bond0
-iface bond0 inet manual
-    bond-slaves enp130s0f4 enp130s0f4d1 enp130s0f4d2 enp130s0f4d3
+auto [新建鏈路聚合設備號，如 bond0]
+iface [新建鏈路聚合設備號，如 bond0] inet manual
+    bond-slaves [網口 1 設備號] [網口 2 設備號] [...]
     bond-mode 802.3ad
-    bond-xmit-hash-policy layer2+3
+    bond-xmit-hash-policy encap3+4
     bond-miimon 100
     bond-downdelay 200
     bond-updelay 200
     bond-lacp-rate 1
 
-auto vmbr0
-iface vmbr0 inet static
-    address 192.168.1.204
-    netmask 255.255.255.0
-    gateway 192.168.1.1
-    bridge-ports bond0
+auto [新建網橋設備號，如 vmbr0]
+iface [新建網橋設備號，如 vmbr0] inet static
+    address [配置為安裝步驟中指定的 IP 地址]/24(可通過`/`配置網段，也可通過`netmask`來配置)
+    netmask [子網掩碼](如果上面一行已配置網段，此處可忽略)
+    gateway [配置網關地址]
+    bridge-ports [聚合設備號，如 bond0，需和上一小節保持一致]
     bridge-stp off
     bridge-fd 0
 ```
 
-測速，確保聚合有效
-
-```
-待補充
-```
-
-
-
-配置完成後，重啟網絡：
-```
-systemctl restart networking
-```
-
-### 開啟 Jumbo Frame
-
-Jumbo Frame 是 10GE 對於高速網絡至關重要，更大的包可以減少包的數量，降低 CPU 在封包和解包過程的負擔，顯著提升網絡的吞吐量。
+#### 4. 重啟網絡以應用配置
 
 ```bash
-# /usr/bin/ip link set [port] mtu 9000
+# systemctl restart networking
 ```
 
-根據需要修改 `[port]` 為你的網絡接口名稱，如果單網卡，在 PVE 環境應該修改 `vmbr0` 的 MTU：
+#### 5. 開啟 [Jumbo Frame](https://en.wikipedia.org/wiki/Jumbo_frame)
+
+Jumbo Frame 是 10GE 對於高速網絡至關重要，更大的包可以減少包的數量，降低 CPU 在封包和解包過程的負擔，顯著提升網絡的吞吐量。對於 Ceph 來說，Jumbo Frame 至關重要。
+
+配置主要網絡設備的 MTU 為 9000，根據前面的配置填入合適的`設備號`，例如 `vmbr0`(無聚合) 或 `bond0`(有聚合)：
 
 ```bash
-# /usr/bin/ip link set vmbr0 mtu 9000
+# /usr/bin/ip link set [設備號] mtu 9000
 ```
 
-如果你有使用上面的 LACP 鏈路聚合，這裡需要使用聚合的接口名稱，例如：
+你可把類似的配置放在`/etc/network/interfaces`中，也可直接把上面的命令放在`/etc/crontab`中，通過`@reboot`和`sleep`(等待網絡初始化完成)來執行，完全是個人喜好，此處不作贅述。
+
+注意！請保證每個節點使用相同的 MTU 封包尺寸，這將是集群穩定性的關鍵，如果 MTU 不一致，PVE 集群會出現不穩定，節點掉線等情況。對於 Ceph 尤其如此，不一致的 MTU 會導致 OSD 心跳受阻，進而導致 OSD 頻繁從集群中離線。我有一個節點出現這個情況花了很長時間才解決。
+
+#### 6. 測速，確保速度符合預期
+
+為了方便調試，我建議所有節點開啟 iperf3 服務，這樣可以大大方便節點間的的網絡調試。
 
 ```bash
-# /usr/bin/ip link set bond0 mtu 9000
+# apt install iperf3
 ```
 
-你可以把類似的配置放在 `/etc/network/interfaces` 中，也可以直接把上面的命令放在 crontab 通過 `@reboot` 和 `sleep` (等待網絡接口初始化完成) 來執行，完全是個人喜好，此處不做贅述。
+從 A 節點測試到 B 節點的網絡速度：
 
-注意！請保證你的每個節點，使用相同的 MTU 包尺寸設置，這將是集群穩定性的關鍵，如果 MTU 不一致，PVE 集群會出現不穩定，某個節點突然斷開的情況。對於 Ceph 更是如此，不一致的 MTU 會導致 OSD 心跳受阻，進而導致 OSD 頻繁從集群中離線。我有一個機器出現這個情況花了很長的時間才發現這是一個致命的問題。
+```bash
+# iperf3 -c [B 節點 IP 地址] -P [線程數]
+```
+
+其中`-P `參數可以指定測試的線程數，默認是 1 個線程。如果需要測試多個線程的話，例如測試 LACP 的效果，可以指定多個線程，例如`-P 10`表示使用 10 個線程進行測試。
 
 ### 配置顯卡直通
 
-如果有 AI 運算需求，遊戲需求或者視頻編輯需求，顯卡直通是必不可少的，這裡面往上有很多的介紹，有對有錯，這裡簡單總結一下步驟：
+如有 AI 運算、遊戲或視頻剪輯需求，顯卡直通必不可少，這裡面網上有很多的介紹，有對有錯，這裡簡單總結一下步驟：
 
-- BIOS 中開啟 IOMMU，這一點尤其重要：
-有一些主板是默認關閉的，也有一些主板是默認開啟的，需要手動確認一下：
+#### 1. 確保`BIOS`中開啟`IOMMU`
+
+確認 IOMMU 可用尤其重要，有一些主板是默認關閉的，也有一些主板是默認開啟的，需要手動確認一下：
+
+```bash
+# dmesg | grep -e DMAR -e IOMMU
 ```
-dmesg | grep -e DMAR -e IOMMU
-```
+
 確保輸出中有：
+
 ```
 DMAR: IOMMU enabled
 ```
-- 確保 IOMMU interrupt remapping 可用：
+
+#### 2. 確保`IOMMU interrupt remapping`可用
+
+```bash
+# dmesg | grep 'remapping'
+```
+
+確保輸出中有：
 
 ```
-dmesg | grep 'remapping'
-```
-確保輸出中有：
-```
 AMD-Vi: Interrupt remapping enabled
-```
-或者:
-```
+
+[OR]
+
 DMAR-IR: Enabled IRQ remapping in ******* mode
 ```
-如果找不到，可以嘗試強制開啟：
+
+如找不到，可嘗試強制開啟：
+
+```bash
+# echo "options vfio_iommu_type1 allow_unsafe_interrupts=1" > /etc/modprobe.d/iommu_unsafe_interrupts.conf
 ```
-echo "options vfio_iommu_type1 allow_unsafe_interrupts=1" > /etc/modprobe.d/iommu_unsafe_interrupts.conf
-```
-確保 /etc/modules 中有以下的條目：
-```
-vio
+
+#### 3. 編輯`/etc/modules`確保有以下的條目
+
+```modules
+vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
 ```
-如果計畫需要更好虛擬 macOS，運行：
+
+#### 4. 如計畫虛擬`macOS`，確保`ignore_msrs=1`被正確配置
+
+```bash
+# echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
 ```
-echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
-```
-- 在啟動的時候，讓宿主機忽略需要分配給 VM 的顯卡：
+
+#### 5. 讓宿主機啟動的時，忽略部分顯卡驅動，預留資源給 VM
+
 不加載 AMD 顯卡的驅動：
+
+```bash
+# echo "blacklist amdgpu" >> /etc/modprobe.d/blacklist.conf
+# echo "blacklist radeon" >> /etc/modprobe.d/blacklist.conf
 ```
-echo "blacklist amdgpu" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist radeon" >> /etc/modprobe.d/blacklist.conf
-```
+
 不加載 NVIDIA 顯卡的驅動：
+
+```bash
+# echo "blacklist nouveau" >> /etc/modprobe.d/blacklist.conf
+# echo "blacklist nvidia*" >> /etc/modprobe.d/blacklist.conf
 ```
-echo "blacklist nouveau" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist nvidia*" >> /etc/modprobe.d/blacklist.conf
-```
+
 不加在 Intel 顯卡的驅動：
-```
-echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf
-```
-- 更新啟動鏡像：
-```
-update-initramfs -u
+
+```bash
+# echo "blacklist i915" >> /etc/modprobe.d/blacklist.conf
 ```
 
-做以上操作之後，大部分的 AMD 顯卡 NVIDIA 顯卡和 Intel 顯卡都可以直通給 VM 使用了，這裡需要注意的是，如果宿主機需要 GUI 的話，不要忽略 Intel 的顯卡驅動，這樣可以保留板載顯卡用來良機和調試。
+#### 6. 更新啟動鏡像
 
-如果上面的操作依然出現問題，個人建議換支持度更高和更新的顯卡，雖然網上有很多奇技淫巧可以一定程度解決問題，但是穩定性和兼容性很難保證，同時需要額外的 hack 來解決的顯卡一般都比較老了，算力上其實意義不大，可以趁機升級了。
+```bash
+# update-initramfs -u
+```
 
-更多信息可以參考這裡：https://pve.proxmox.com/wiki/PCI_Passthrough
+🔔 完成以上操作後，大部分 AMD、NVIDIA 和 Intel 顯卡都能直通給 VM 使用了，需要注意如宿主機需要 GUI，不要忽略 Intel 核顯，這樣可以保留板載顯卡用來亮機和調試。
 
+如經歷上面操作後依然出現問題，個人建議更換支持度更高和更新的顯卡，雖然網上有很多 workaround 可一定程度解決問題，但穩定性和兼容性難以保證，同時需要額外的 hack 來解決的顯卡一般都較老，算力上意義不大，可趁機升級。更多信息可以參考[官方文檔](https://pve.proxmox.com/wiki/PCI_Passthrough)。
+
+-----------------------------------------------------------------------------
 
 ## PVE 集群配置
 
