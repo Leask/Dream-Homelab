@@ -113,11 +113,7 @@
 - 入口路由 / 防火牆 [UniFi Dream Machine Special Edition (UDM-SE 180W)](https://ca.store.ui.com/ca/en/products/udm-se)
     > 這款設備有一個 10G SFP+ Uplink 作為主要入口，一個 2.5G RJ45 Uplink 作為備用網絡入口，有 1 個 10G SFP+ Downlink 和 8 個 GE RJ45 Downlink，其中 2 個電口支持 PoE+， 其餘 6 個是電口都支持 PoE。它唯一讓我不滿意的是 Uplink 只開放了 3.5Gbps，雖然我只有 3Gbps 對等光線接入，的確已經足夠，但是總覺得餘量不足，比較懊悔的是，我下單不久[Dream Machine Pro Max (UDM-Pro-Max)](https://ca.store.ui.com/ca/en/category/cloud-gateways-large-scale/products/udm-pro-max) 就上市了，它的 Uplink 能到 5 Gbps，就好不少。
 
-#### 網絡組建
-
-在大致決定好設備的位置之後，就可以開始上架機器和接線了。我有三路網絡入口，主網絡是 Bell Fibe 3Gbps 的對等光纖，主備線路是 Starlink，次備是 Telus 的無限流 5G+ 蜂窩網，次備網絡是通過 Nighthawk M5 5G WiFi 6 Mobile Router(MR5200) 實現的，這款路由可以擴展天線，支持 5G Sub-6 band，1.8Gbps Wi-Fi 6，最重要的是有一個 Gigabit Ethernet WAN 口，這樣可以直接接入網關，作為網用網絡入口。
-
-主要網絡設備的拓撲：
+#### 主要網絡設備的拓撲：
 
 ```
 +-----------------------------------------------------------------+
