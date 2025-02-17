@@ -12,7 +12,7 @@
 - 存儲服務器往往以集群的方式存在，對應用服務器提供冷熱數據的訪問，二進制數據和結構化數據的存儲、備份等等，有多方式實施，如 NAS，SAN，DAS 等型態；
 - 應用服務器承擔著要的計算任務，包括 CPU 為主的運算以及新興的 GPU 為主的運算，提供的服務包括 Web 服務，郵件服務，虛擬機，容器集群，密集計算服務等等。
 
-超融合[HCI (Hyper-Converged Infrastructure)](https://en.wikipedia.org/wiki/Hyper-converged_infrastructure)的概念比較新，它是隨著虛擬化的發展而提出來的一重新組織服務器資源的策略，也是所謂軟件定義數據中心的核心概念之一。超融合數據中心將網絡（部分），存儲，運算三種資源融合在一起，形成一個統一的計算資源池，完全由虛擬化平台提供各種服務、計算和存儲資源。
+超融合[HCI (Hyper-Converged Infrastructure)](https://en.wikipedia.org/wiki/Hyper-converged_infrastructure)的概念比較新，它是隨著虛擬化的發展而提出來的一重新`組織服務器資源的策略`，也是所謂`軟件定義數據中心`的核心概念之一。超融合數據中心將網絡（部分），存儲，運算三種資源融合在一起，形成一個統一的計算資源池，完全由虛擬化平台提供各種服務、計算和存儲資源。
 
 在一個超融合計算中心裡面，除了物理主機的網絡連接需要單獨的網絡設備之外，其他的計算資源都可以通過虛擬化平台來提供，每個物理主機都是全能節點，承擔部分的計算和存儲，他們之間緊密相連，共享資源，相互備援。超融合不是一個特定的單一軟件技術，它其實脫胎於虛擬化、分佈式存儲等一系列技術上的概念。在實施上，常見的超融技術棧有 [PVE (Proxmox VE)](https://www.proxmox.com/en/proxmox-ve) + [Ceph](https://ceph.io), [VMware vSphere](https://www.vmware.com/products/cloud-infrastructure/vsphere), [Hyper-V + S2D](https://learn.microsoft.com/en-us/system-center/vmm/s2d-hyper-converged?view=sc-vmm-2025&tabs=HyperVhosts) 等等。本文以 PVE + Ceph 為例子，其他方案的包裝可能有差異，但是原理是相通的。
 
