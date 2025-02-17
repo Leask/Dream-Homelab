@@ -202,53 +202,60 @@ $ hostname --ip-address
 
 確保返回的地址是 `/etc/host` 中配置的地址，而不是 `127.0.0.1` 或 `::1` 等 `loopback` 地址。
 
-##### 3
-. 添加 PVE 的 apt 源
+##### 3. 添加 PVE 的 apt 源
+
 ```bash
 # echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 ```
 
-- 添加 PVE 的密鑰：
+##### 4. 添加 PVE 源的密鑰
 
-        ```
-        wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
-        # verify
-        sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
-        7da6fe34168adc6e479327ba517796d4702fa2f8b4f0a9833f5ea6e6b48f6507a6da403a274fe201595edc86a84463d50383d07f64bdde2e3658108db7d6dc87 /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
-        ```
-
-- 更新 apt 源，升級系統：
-
-        ```
-        apt update && apt upgrade -y
-        ```
-
-- 安裝 PVE 內核 ：
-
-        ```
-        apt install proxmox-default-kernel
-        systemctl reboot
-        ```
-
-- 安裝 PVE 套件：
-
-        ```
-        apt install proxmox-ve postfix open-iscsi chrony
-        ```
-
-- 刪除 Debian 默認內核：
-
-        ```
-        apt remove linux-image-amd64 'linux-image-6.1*'
-        update-grub
-        ```
-
-- 刪除 os-prober，避免虛擬機被錯誤加到引導菜單：
+```bash
+# wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 ```
-apt remove os-prober
+
+Verify
+
+```bash
+$ sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
+7da6fe34168adc6e479327ba517796d4702fa2f8b4f0a9833f5ea6e6b48f6507a6da403a274fe201595edc86a84463d50383d07f64bdde2e3658108db7d6dc87 /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 ```
-- 刪除企業版 apt 源，僅使用 開源版組件（如果你打算購買企業版，忽略此步驟）：
+
+##### 5. 更新 apt 源，升級系統
+
+```bash
+# apt update && apt upgrade -y
 ```
+
+##### 6. 安裝 PVE 內核
+
+```bash
+# apt install proxmox-default-kernel
+# systemctl reboot
+```
+
+##### 7. 安裝 PVE 套件
+
+```bash
+# apt install proxmox-ve postfix open-iscsi chrony
+```
+
+##### 8. 刪除 Debian 默認內核
+
+```bash
+# apt remove linux-image-amd64 'linux-image-6.1*'
+# update-grub
+```
+
+##### 9. 刪除 os-prober，避免虛擬機被錯誤加到引導菜單
+
+```bash
+# apt remove os-prober
+```
+
+##### 10. 刪除企業版 apt 源，僅使用 開源版組件（如果你打算購買企業版，忽略此步驟）
+
+```bash
 # rm /etc/apt/sources.list.d/pve-install-repo.list
 ```
 - 重啟，確保可以正常引導，如果你的 Debian 是啟動到命令行的，你應該會看到 PVE 的歡迎介面，如果你是啟動到圖形介面的，你不會看到任何變化，可以執行以下命令查看 PVE 是不是已經正確安裝：
