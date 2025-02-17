@@ -561,7 +561,8 @@ pvecm delnode hp4
     - RBD (Ceph Block Device)：塊設備，提供塊級別的存儲，可以作為虛擬機的磁盤使用。
     - RGW (Ceph Object Gateway)：對象存儲，提供對象級別的存儲，可以作為對象存儲使用，可直接導出為 S3 兼容的對象存儲，NFS 兼容的文件系統，可以作為文件系統使用。
     - CephFS (Ceph File System)：POSIX 兼容的文件系統，可以作為文件系統使用。
-- Monitor 負責集群的元數據管理，包括集群的拓撲結構，節點的健康狀態等。
+- MON (Monitor) 負責集群的元數據管理，包括集群的拓撲結構，節點的健康狀態等。
+- MGR (Manager) 負責集群的監控和告警，可以通過 Web 界面查看集群的狀態，也可以通過 API 查看集群的狀態，MGR 還負責支持 Ceph cli 指令，提供 iSCSI Gateway 和 NFS Gateway 等外部訪問服務。
 - OSD (Object Storage Daemon) 負責數據的存儲和檢索，每個機器的每一塊物理存儲，都需要配置一個 OSD，他們各自獨立，互不干擾，只對 Monitor 負責。
 - MDS (Metadata Server) 負責文件系統的元數據管理，如果需要使用 CephFS 的話，需要配置 MDS，CephFS 服務的 overhead 比較大，根據自己的需要開啟，但是作為跨節點的文件共享服務相當好用，我推薦大家嘗試一下。
 - PG (Placement Group) 是 Ceph 的數據邏輯管理單元，Ceph 通過 PG 來管理數據的分配，每個 OSD 通常會包含若干個 PG，每個 PG 會根據 CRUSH map 的策略，在不同 OSD 上放置副本，對於每個存儲池需要切割成多少個 PG，後面會介紹。
