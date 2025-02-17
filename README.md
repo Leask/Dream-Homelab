@@ -785,3 +785,82 @@ PVE 集群可以通過 `HA (High Availability)` 面板來配置，前提是上�
 - 回到 HA 資源配置，添加需要高可用的 VM 和對應的資源組，保存。
 
 這樣配置之後，VM 在遷移的時候，會自動遷移到有相應資源的節點上。
+
+## 備份方案
+
+PBS（Proxmox Backup Server）是 PVE 的衍生項目，是針對 PVE 設計的原生備份方案。它很容易整合到 PVE 集群上，作為備份服務的延伸，提供從容器到 VM，甚至物理主機的完整備份方案。
+
+### 安裝 PBS
+
+有多種方法安裝 PBS，可以直接從 https://www.proxmox.com/en/downloads/proxmox-backup-server 下載啟動鏡像，DD 到 U 盤上，直接安裝成一個獨立的備份主機。也可以在 Debian 或者 PVE 上安裝，以下詳細說一下這種安裝方式，也是我所使用的安裝方式。注意 PVE 和 PBS 是可以獨立安裝也可以和諧共存到一個主機上的，當然有條件的話，還是推薦獨立一個備份服務器，但是基於資源利用的考慮，我選擇了把 PBS 安裝到我存儲資源最富裕的 PVE 節點上。
+
+獲得 PBS APT 源的密鑰：
+
+```
+# wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
+```
+
+驗證密鑰：
+
+```
+sha512sum /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
+7da6fe34168adc6e479327ba517796d4702fa2f8b4f0a9833f5ea6e6b48f6507a6da403a274fe201595edc86a84463d50383d07f64bdde2e3658108db7d6dc87  /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
+```
+
+添加 APT 源：
+
+```
+# vim /etc/apt/sources.list.d/pbs.list
+```
+
+對於付費用戶：
+
+```
+deb https://enterprise.proxmox.com/debian/pbs bookworm pbs-enterprise
+```
+
+對於免費用戶：
+
+```
+deb http://download.proxmox.com/debian/pbs bookworm pbs-no-subscription
+```
+
+對於不怕死的嚐鮮用戶：
+
+```
+deb http://download.proxmox.com/debian/pbs bookworm pbstest
+```
+
+對於只需要備份客戶端，不需要備份服務器的用戶：
+
+Debian Bookworm
+
+```
+deb http://download.proxmox.com/debian/pbs-client bookworm main
+```
+
+Debian Bullseye
+
+```
+deb http://download.proxmox.com/debian/pbs-client bullseye main
+```
+
+Debian Buster / Ubuntu 20.04 LTS
+
+```
+deb http://download.proxmox.com/debian/pbs-client buster main
+```
+
+安裝 PBS 服務器：
+
+```
+apt update
+apt install proxmox-backup-server
+```
+
+安裝 PBS 客戶端：
+
+```
+apt update
+apt install proxmox-backup-client
+```
