@@ -165,33 +165,32 @@
 
 ## 安裝虛擬化平台 PVE
 
-Proxmax VE 基於 Debian，這其實也是我選擇它的原因之一，我是多年 Debian 用戶，對於 Debian 的穩定性相當有信心。它唯一的缺點是保守，Stable 分支的軟件包相對較舊，需要嘗新可以用其他分支，但是我的理解是宿主機的穩定性是最重要的，嘗新完全可以在 VM 中折騰。
+Proxmax VE 基於 [Debian](https://www.debian.org)，這其實也是我選擇它的原因之一。作為多年 Debian 用戶，我對於它的穩定性相當有信心。它唯一缺點是保守，stable 分支軟件包相對較舊，需要嘗新可以用其他分支，但是我認為宿主機的穩定性是最重要的，嘗新完全可以在 VM 中折騰。
 
-事實上我推薦的安裝方式並不是直安裝 PVE，而是先安裝 Debian，然後安裝 PVE 軟件包。這個主要的原因在於，我在幾個服務器上，嘗試直接安裝 PVE 都失敗，可能是我環境的問題，不深究，但是從 Debian 上安裝，表現更符合預期。
+事實上我推薦的安裝方式並不是直安裝 PVE，而是先安裝 Debian，然後安裝 PVE 軟件包。這個主要的原因在於，我在幾個服務器上，嘗試直接安裝 PVE 都失敗，可能是我環境的問題，也有其他朋友和我遇到相似的問題，這裡不深究，但是從 Debian 上安裝，表現更符合預期：
 
-- 直接安裝 PVE：https://www.proxmox.com/en/products/proxmox-virtual-environment/get-started
-- 從 Debian 安裝：https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm
+- [使用引導介質直接安裝 PVE](https://www.proxmox.com/en/products/proxmox-virtual-environment/get-started);
+- [從 Debian 安裝 PVE](https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm)
 
-PVE 的官方文檔上要求 Debian 版本是 12 Bookworm，事實上大家可以放心直接在 Debian stable 分支上運行。有一些包比 PVE 預設的要更新，但是沒有任何兼容性問題。
+PVE 官方文檔要求 Debian 版本為 12(Bookworm)，事實上大家可以放心直接在 stable 分支上運行。有一些包比 PVE 預設的更新，但是沒有任何兼容性問題。
 
-簡單總結一下安裝的步驟：
+簡述安裝步驟：
 
 - 安裝 Debian 12 Bookworm，切換到 stable 分支；
-
 - 在 /etc/host 中加入當前主機的 IP 地址
-
-```/etc/host
-[本機本地 IP]    [當前主機名]
-```
-例如：
-```/etc/host
-192.168.1.64    Enlightenment
-```
-確保地址正確：
-```
-hostname --ip-address
-```
-確保返回的地址是 /etc/host 中配置的地址，而不是 127.0.0.1 或者 ::1 等。
+    > `sudo vim /etc/host`
+        ```
+        [本機本地 IP]    [當前主機名]
+        ```
+        例如：
+        ```/etc/host
+        192.168.1.64    Enlightenment
+        ```
+        確保地址正確：
+        ```
+        hostname --ip-address
+        ```
+        確保返回的地址是 /etc/host 中配置的地址，而不是 127.0.0.1 或者 ::1 等。
 
 - 添加 PVE 的 apt 源：
 
