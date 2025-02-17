@@ -273,7 +273,7 @@ $ pveversion
 
 如果看到類似以下的輸出，說明 PVE 已經正確安裝：
 
-```bash
+```
 pve-manager/8.3.3/f157a38b211595d6 (running kernel: 6.11.0-1-pve)
 ```
 
@@ -281,7 +281,19 @@ pve-manager/8.3.3/f157a38b211595d6 (running kernel: 6.11.0-1-pve)
 
 ##### 12. 訪問 PVE 管理面板
 
-PVE 管理頁面默認可以通過這個地址`https://[本機本地 IP]:8006`訪問，例如`https://192.168.1.64:8006`。注意協議是`https`需要瀏覽器忽略一下自簽證書的安全檢查。管理頁面默認可以通過系統的`root`帳戶密碼登陸，`Realm` 選擇 `Linux PAM standard authentication`，你可以在進入系統之後配置其他登錄驗證方式。
+PVE 管理頁面默認可以通過這個地址訪問：
+
+```
+https://[節點本地 IP 地址]:8006
+```
+
+例如：
+
+```
+https://192.168.1.64:8006
+```
+
+注意協議是`https`，瀏覽器需要忽略一下自簽證書的安全檢查。管理頁面默認可以通過系統的`root`帳戶密碼登陸，`Realm`選擇`Linux PAM standard authentication`，進入系統之後配置其他登錄驗證方式。
 
 至此 PVE 節點已經完成了基本的安裝，下面我會開始介紹一些必須的配置項目。
 
