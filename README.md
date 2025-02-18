@@ -616,7 +616,7 @@ Ceph 配置很簡單，直接在 PVE Web 界面中安裝即可。它會自動安
 
 ### 一些常用的 Ceph 命令
 
-#### 檢查 Ceph 的健康狀態：
+#### 檢查 Ceph 健康狀態
 
 ```bash
 # ceph -s
@@ -641,7 +641,7 @@ Ceph 配置很簡單，直接在 PVE Web 界面中安裝即可。它會自動安
     client:   1.7 MiB/s rd, 5.1 MiB/s wr, 172 op/s rd, 475 op/s wr
 ```
 
-#### 檢查 OSD 的狀態：
+#### 檢查 OSD 狀態
 
 ```bash
 # ceph osd tree
@@ -672,7 +672,7 @@ ID  CLASS  WEIGHT    TYPE NAME               STATUS  REWEIGHT  PRI-AFF
 20    ssd   3.63869          osd.20              up   1.00000  1.00000
 ```
 
-#### 檢查 Ceph 的磁盤空間：
+#### 檢查 Ceph 磁盤空間
 
 ```bash
 # ceph df
