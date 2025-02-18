@@ -793,6 +793,8 @@ $ crushtool -c crushmap.text -o crushmap.compiled.new
 
 ## 邁向高可用
 
+![HA](./assets/Screenshot%202025-02-18%20at%201.52.10 AM.png)
+
 所謂小集群服務的高可用，除了網絡本身要有冗余，電源方案要有 UPS 和發電機之外（是的，我有發電機），VM 能自動從故障的物理節點中遷移和重建很重要。PVE 集群可以通過`HA (High Availability)`面板來配置，前提是上面提到的 PVE 集群、Ceph集群都已正確配置。
 
 - 找到`HA`管理頁面，創建`lrm`節點；
@@ -805,6 +807,8 @@ $ crushtool -c crushmap.text -o crushmap.compiled.new
 測試，配置成功之後，在 VM 所在的節點上拔出網線，VM 應該會自動遷移到其他機器上運行，如出錯，可查看`cluster log`進行排查。
 
 ### 關於顯卡以及其他有直通硬件依賴的高可用配置
+
+![GPU](./assets/Screenshot%202025-02-18%20at%201.52.10 AM.png)
 
 有一些業務依賴 GPU 或者其他硬件，這些 VM 在自動遷移之後，需要找到功能可替代的硬件才能正常運行。這一類的 VM 需要一些額外的配置步驟來實現高可用：
 
