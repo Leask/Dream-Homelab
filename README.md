@@ -793,7 +793,7 @@ $ crushtool -c crushmap.text -o crushmap.compiled.new
 
 ## 邁向高可用
 
-![HA](./assets/Screenshot%202025-02-18%20at%201.52.10 AM.png)
+![HA](./assets/Screenshot%202025-02-18%20at%201.51.09 AM.png)
 
 所謂小集群服務的高可用，除了網絡本身要有冗余，電源方案要有 UPS 和發電機之外（是的，我有發電機），VM 能自動從故障的物理節點中遷移和重建很重要。PVE 集群可以通過`HA (High Availability)`面板來配置，前提是上面提到的 PVE 集群、Ceph集群都已正確配置。
 
