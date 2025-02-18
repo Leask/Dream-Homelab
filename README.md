@@ -580,7 +580,7 @@ Membership information
 
 ## Ceph 配置
 
-![Ceph](./assets/Screenshot%202025-02-17%20at%2012.40.04 AM.png)
+![Ceph](./assets/Screenshot%202025-02-18%20at%201.41.13 AM.png)
 
 一句話概括 Ceph 是什麼：一種分佈式的網絡存儲，aka 跨節點的高性能高可用的磁盤陣列。下面介紹一下 Ceph 的一些基本概念：
 
