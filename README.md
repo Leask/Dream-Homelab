@@ -614,6 +614,81 @@ Ceph 配置很簡單，直接在 PVE Web 界面中安裝即可。它會自動安
 - 特別注意內存，高性能網絡存儲需要緩存很多索引和數據，特別是元數據映射，至少要為 Monitor 進程預留 4GB 內存，更大的集群可能要 8GB、16GB 甚至更多；
 - 對於存儲節點，根據每個 OSD 所管理的數據大小，理想情況下 1TB 數據需要 1GB 內存以滿足各種訪問請求，若節點上有 10TB SSD 就需要預留 10GB 內存來保障集群效率。
 
+### 一些常用的 Ceph 命令
+
+#### 檢查 Ceph 的健康狀態：
+
+```bash
+# ceph -s
+  cluster:
+    id:     3f0e11a8-f020-45a4-b2ca-dd9fcabc16e2
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum Rubao,Rio,Enlightenment (age 10h)
+    mgr: Rio(active, since 3w), standbys: Rubao, Juan, Enlightenment
+    mds: 1/1 daemons up, 3 standby
+    osd: 19 osds: 19 up (since 5h), 19 in (since 6d)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   4 pools, 145 pgs
+    objects: 1.36M objects, 5.0 TiB
+    usage:   20 TiB used, 45 TiB / 65 TiB avail
+    pgs:     145 active+clean
+
+  io:
+    client:   1.7 MiB/s rd, 5.1 MiB/s wr, 172 op/s rd, 475 op/s wr
+```
+
+#### 檢查 OSD 的狀態：
+
+```bash
+# ceph osd tree
+ID  CLASS  WEIGHT    TYPE NAME               STATUS  REWEIGHT  PRI-AFF
+-1         64.58678  root default
+-9         13.64516      host Enlightenment
+13    ssd   0.90970          osd.13              up   1.00000  1.00000
+14    ssd   3.63869          osd.14              up   1.00000  1.00000
+15    ssd   3.63869          osd.15              up   1.00000  1.00000
+16    ssd   3.63869          osd.16              up   1.00000  1.00000
+17    ssd   1.81940          osd.17              up   1.00000  1.00000
+-7         14.55475      host Juan
+ 2    ssd   3.63869          osd.2               up   1.00000  1.00000
+ 3    ssd   3.63869          osd.3               up   1.00000  1.00000
+ 6    ssd   3.63869          osd.6               up   1.00000  1.00000
+ 7    ssd   3.63869          osd.7               up   1.00000  1.00000
+-5         18.19344      host Rio
+ 1    ssd   3.63869          osd.1               up   1.00000  1.00000
+ 5    ssd   3.63869          osd.5               up   1.00000  1.00000
+ 8    ssd   3.63869          osd.8               up   1.00000  1.00000
+ 9    ssd   3.63869          osd.9               up   1.00000  1.00000
+10    ssd   3.63869          osd.10              up   1.00000  1.00000
+-3         18.19344      host Rubao
+ 0    ssd   3.63869          osd.0               up   1.00000  1.00000
+ 4    ssd   3.63869          osd.4               up   1.00000  1.00000
+11    ssd   3.63869          osd.11              up   1.00000  1.00000
+12    ssd   3.63869          osd.12              up   1.00000  1.00000
+20    ssd   3.63869          osd.20              up   1.00000  1.00000
+```
+
+#### 檢查 Ceph 的磁盤空間：
+
+```bash
+# ceph df
+--- RAW STORAGE ---
+CLASS    SIZE   AVAIL    USED  RAW USED  %RAW USED
+ssd    65 TiB  45 TiB  20 TiB    20 TiB      30.42
+TOTAL  65 TiB  45 TiB  20 TiB    20 TiB      30.42
+
+--- POOLS ---
+POOL          ID  PGS   STORED  OBJECTS     USED  %USED  MAX AVAIL
+.mgr           1    1   73 MiB       16  293 MiB      0    8.0 TiB
+Ivy            2   64  2.2 TiB  590.48k  8.6 TiB  21.18    8.0 TiB
+Tea_data       3   64  2.7 TiB  766.34k   11 TiB  25.39    8.0 TiB
+Tea_metadata   4   16  225 MiB    3.77k  900 MiB      0    8.0 TiB
+```
+
 ### MON 節點個數選擇
 
 Monitor 節點至少需要 3 個，這是因為 Ceph 集群通過 paxos 協議來取得一致性，至少需要 3 個節點確保可用，它具體規則是：
