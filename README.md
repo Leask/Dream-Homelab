@@ -104,6 +104,8 @@
 
 另一點就是考慮傳統 RJ45 電口還是 SFP/SFP+/SFP28/QSFP+/QSFP28 等光模塊接口。在這個問題上，我考慮了很久，主要的原因是，我已經有一部分的設備已經是 10GE 電接口的，如果我選擇 SFP+ 路線，我將無法兼容已有的設備。但是 10G 以上電口在我之前的使用中，的確遇到一些問題，網卡載荷大，發熱高，我的確想趁機會演進到光口路線。在花了很多時間考量，最後決定都要有，事實上到目前為止，我依然覺得這是一個正確的決定，目前的網絡容量和靈活性讓我在工作中獲得了很大的彈性，並預留了足夠的性能空間。
 
+<img width="2935" alt="Screenshot 2025-02-19 at 7 12 57 PM" src="https://github.com/user-attachments/assets/7f7d7cb6-f99d-4839-8918-09eee0c8914b" />
+
 ### 我選用的設備
 
 - 聚合交換機 [UniFi USW-Pro-Aggregation](https://ca.store.ui.com/ca/en/products/usw-pro-aggregation)
